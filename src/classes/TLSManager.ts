@@ -4,6 +4,7 @@ import axios from 'axios'
 import { PDFDocument } from 'pdf-lib'
 import * as puppeteer from 'puppeteer'
 import { Logger } from '~/utils/Logger'
+import { v4 } from 'uuid'
 
 export default class TLSManager {
   public static async Login (id: string, password: string) {
@@ -31,7 +32,6 @@ export default class TLSManager {
     const Regex = /^https:\/\/tls\.kku\.ac\.kr\/local\/ubdoc\/\?.*$/
     if (!Regex.test(url)) return null
     const browser = await puppeteer.launch({
-      headless: false,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1920,1080'],
       defaultViewport: {
         width: 1920,
@@ -52,7 +52,8 @@ export default class TLSManager {
       fs.writeFileSync('save.html', html, 'utf-8')
       await new Promise(resolve => setTimeout(resolve, 1500))
       const title = await frame.$eval('.fnm', el => el.textContent?.trim()) || 'unknown'
-      const dirPath = path.join('./downloads', title)
+      const uuidPath = v4()
+      const dirPath = path.join('./downloads', uuidPath)
       if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
 
       const imgList = await frame.$$eval('#indexWrap > div', divs => divs.map((div) => {
@@ -93,9 +94,9 @@ export default class TLSManager {
         })
       }
       const pdfBytes = await pdfDoc.save()
-      await fs.promises.writeFile(path.join(dirPath, `${title}`), pdfBytes)
-      Logger.success('TLSManager').put('PDF Created').next('path').put(path.join(dirPath, `${title}.pdf`)).out()
-      return { title, dirPath }
+      await fs.promises.writeFile(path.join(dirPath, title), pdfBytes)
+      Logger.success('TLSManager').put('PDF Created').next('path').put(path.join(dirPath, title)).out()
+      return { title, path: path.join(dirPath, title), url: uuidPath }
     } catch (e) {
       Logger.error('TLSManager').put('Download').put(e).out()
       return null

@@ -7,8 +7,10 @@ import express, { Request, Response, NextFunction } from 'express'
 
 import V1 from '~/router/v1/'
 import MiddleWare from '~/classes/Middleware'
+import { PrismaClient } from '@prisma/client'
 
 const app = express()
+const prisma = new PrismaClient()
 const basePath = process.env.BASE_PATH
 
 app.use(cors())
@@ -24,6 +26,12 @@ app.use('*', async (req: Request, res: Response, next: NextFunction) => {
   next()
 })
 
+app.get(`${basePath}/file/:path`, async (req: Request, res: Response) => {
+  const path = req.params.path
+  const file = await prisma.files.findFirst({ where: { url: path } })
+  if (!file) return res.status(404).send({ code: 404, message: 'Not Found' }).end()
+  res.download(`./${file.path}/`, file.name)
+})
 app.use(MiddleWare.verify)
 app.use(`${basePath}/v1`, V1)
 
