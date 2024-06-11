@@ -9,6 +9,7 @@ import V1 from '~/router/v1/'
 import MiddleWare from '~/classes/Middleware'
 
 const app = express()
+const basePath = process.env.BASE_PATH
 
 app.use(cors())
 app.use(helmet())
@@ -24,7 +25,7 @@ app.use('*', async (req: Request, res: Response, next: NextFunction) => {
 })
 
 app.use(MiddleWare.verify)
-app.use('/api/v1', V1)
+app.use(`${basePath}/v1`, V1)
 
 app.use('/session', async (req: Request, res: Response) => { res.status(200).send({ code: 200, message: 'OK' }).end() })
 app.use('*', async (req: Request, res: Response, next: NextFunction) => { res.status(404).send({ code: 404, message: 'Not Found' }).end() })

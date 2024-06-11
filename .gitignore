@@ -27,3 +27,4 @@ pnpm-debug.log*
 
 */googleCredentials.json
 /prisma/migrations
+/downloads
